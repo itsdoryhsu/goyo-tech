@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企業版員工健檢資訊整合報告儀表板</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #95a5a6;
+      --accent: #bdc3c7;
+      --light: #ecf0f1;
+      --dark: #7f8c8d;
+      --success: #a9b7b7;
+      --warning: #d0d3d4;
+      --danger: #95a5a6;
+      --highlight: #34495e;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px 0;
+      margin-bottom: 30px;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .company-info {
+      margin-bottom: 10px;
+    }
+    
+    .provider-info {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--primary);
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--secondary);
+    }
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+    
+    .section-title {
+      text-align: center;
+      margin: 30px 0;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--primary);
+      position: relative;
+    }
+    
+    .section-title::after {
+      content: "";
+      display: block;
+      width: 100px;
+      height: 3px;
+      background-color: var(--secondary);
+      margin: 10px auto;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 30px;
+      height: 100%;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .summary-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .summary-card.positive {
+      border-top: 4px solid #a9b7b7;
+    }
+    
+    .summary-card.warning {
+      border-top: 4px solid #bdc3c7;
+    }
+    
+    .summary-card.negative {
+      border-top: 4px solid #95a5a6;
+    }
+    
+    .summary-card.neutral {
+      border-top: 4px solid #d0d3d4;
+    }
+    
+    .summary-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+    
+    .summary-label {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-bottom: 20px;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .insight-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #95a5a6;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    
+    .insight-title {
+      font-weight: 600;
+      color: #7f8c8d;
+      margin-bottom: 10px;
+    }
+    
+    .recommendation-box {
+      background-color: #f5f5f5;
+      border-left: 4px solid #a9b7b7;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    
+    .recommendation-title {
+      font-weight: 600;
+      color: #7f8c8d;
+      margin-bottom: 10px;
+    }
+    
+    .alert-box {
+      background-color: #f0f0f0;
+      border-left: 4px solid #bdc3c7;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    
+    .alert-title {
+      font-weight: 600;
+      color: #7f8c8d;
+      margin-bottom: 10px;
+    }
+    
+    .insight-box ul, .recommendation-box ul, .alert-box ul, 
+    .insight-box ol, .recommendation-box ol, .alert-box ol {
+      padding-left: 20px;
+      margin-left: 10px;
+    }
+    
+    .insight-box li, .recommendation-box li, .alert-box li {
+      margin-bottom: 8px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #e1e1e1;
+    }
+    
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+    
+    tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .data-table {
+      border: 1px solid #e1e1e1;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    .data-table th {
+      background-color: #f0f0f0;
+      border-bottom: 2px solid #d0d0d0;
+    }
+    
+    .data-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    .data-table td {
+      vertical-align: middle;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    .badge.success {
+      background-color: #ecf0f1;
+      color: #7f8c8d;
+    }
+    
+    .badge.warning {
+      background-color: #e0e0e0;
+      color: #7f8c8d;
+    }
+    
+    .badge.danger {
+      background-color: #d0d0d0;
+      color: #7f8c8d;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      color: #666;
+      font-size: 14px;
+      margin-top: 40px;
+      border-top: 1px solid #e1e1e1;
+    }
+    
+    .page-nav {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    
+    .page-nav a {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 0 10px;
+      background-color: var(--secondary);
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+    
+    .page-nav a:hover {
+      background-color: var(--primary);
+    }
+    
+    .highlight {
+      font-weight: 500;
+      color: #34495e;
+      border-bottom: 1px dotted #34495e;
+    }
+    
+    .risk-section {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .risk-table td {
+      vertical-align: top;
+    }
+    
+    .risk-factors {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .industry-label {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+      margin-bottom: 15px;
+    }
+    
+    .age-analysis {
+      margin-top: 20px;
+    }
+    
+    .age-recommendation {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .age-recommendation .recommendation-box {
+      flex: 1;
+      margin: 10px 0;
+    }
+    
+    .block-title {
+      background-color: var(--light);
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: var(--primary);
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .matching-blocks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .matching-block {
+      height: 100%;
+    }
+    
+    .divider {
+      height: 1px;
+      background-color: #e1e1e1;
+      margin: 30px 0;
+    }
+    
+    .checkup-table {
+      margin-top: 15px;
+    }
+    
+    .checkup-table th:first-child,
+    .checkup-table td:first-child {
+      width: 40%;
+    }
+    
+    .checkup-category {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+    
+    .esg-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    
+    .esg-icon {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      margin-right: 15px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    
+    .esg-content {
+      flex: 1;
+    }
+    
+    .esg-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .promotion-card {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      border-left: 4px solid var(--secondary);
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .promotion-card-title {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 10px;
+      border-bottom: 1px solid #e1e1e1;
+      padding-bottom: 5px;
+    }
+    
+    .promotion-card-content {
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .promotion-card-left {
+      flex: 2;
+      padding-right: 20px;
+    }
+    
+    .promotion-card-right {
+      flex: 1;
+      padding-left: 20px;
+      border-left: 1px dashed #e1e1e1;
+    }
+    
+    .esg-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .esg-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      border-top: 4px solid var(--secondary);
+    }
+    
+    .esg-card-title {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .esg-card-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 10px 0;
+      color: var(--primary);
+    }
+    
+    .esg-card-label {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .esg-card-description {
+      margin-top: 10px;
+      font-size: 14px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 10px;
+    }
+    
+    .esg-card-standard {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .sdg-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .sdg-icon {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      margin-right: 15px;
+      font-weight: 700;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    
+    .sdg-content {
+      flex: 1;
+    }
+    
+    .sdg-title {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+    
+    .sdg-description {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .health-metric {
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    
+    .health-metric-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .health-metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .health-metric-description {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+    
+    .action-button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      text-align: center;
+    }
+    
+    .action-button:hover {
+      background-color: #1a252f;
+    }
+    
+    .action-button.secondary {
+      background-color: var(--secondary);
+    }
+    
+    .action-button.secondary:hover {
+      background-color: #7f8c8d;
+    }
+    
+    @media (max-width: 768px) {
+      .summary-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .grid, .matching-blocks {
+        grid-template-columns: 1fr;
+      }
+      
+      .esg-card-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .promotion-card-content {
+        flex-direction: column;
+      }
+      
+      .promotion-card-right {
+        border-left: none;
+        border-top: 1px dashed #e1e1e1;
+        padding-left: 0;
+        padding-top: 10px;
+        margin-top: 10px;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div>
+          <h1>企業版員工健檢資訊整合報告</h1>
+          <div class="company-info">
+            <span>ABC科技股份有限公司</span> | <span>2025年度健檢報告</span> | <span>員工人數：328人</span>
+          </div>
+          <div class="provider-info">
+            <strong>健康資訊整合提供商：健康數據分析股份有限公司</strong><br>
+            業務窗口：王小明 | 聯絡電話：02-12345678 | 電子郵件：service@healthdata.com.tw
+          </div>
+        </div>
+        <div>
+          <img src="https://via.placeholder.com/150x50" alt="健康數據分析公司標誌">
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <div class="container">
+    <!-- 摘要指標區 -->
+    <div class="summary-cards">
+      <div class="summary-card positive">
+        <div class="summary-label">員工參與率</div>
+        <div class="summary-value">96.3%</div>
+        <div class="summary-label">較去年提升 2.1%</div>
+      </div>
+      <div class="summary-card warning">
+        <div class="summary-label">異常指標比例</div>
+        <div class="summary-value">23.8%</div>
+        <div class="summary-label">較去年下降 1.5%</div>
+      </div>
+      <div class="summary-card negative">
+        <div class="summary-label">高風險族群</div>
+        <div class="summary-value">12.4%</div>
+        <div class="summary-label">較去年上升 0.8%</div>
+      </div>
+      <div class="summary-card neutral">
+        <div class="summary-label">健康改善率</div>
+        <div class="summary-value">68.5%</div>
+        <div class="summary-label">較去年提升 5.2%</div>
+      </div>
+    </div>
+    
+    <!-- 總覽區塊 -->
+    <div class="card">
+      <div class="card-header">
+        <h2>企業健檢總覽</h2>
+      </div>
+      <p>本報告彙整貴公司 2025 年度員工健檢數據，並與過去三年及同產業數據進行比較分析，提供專業健康管理建議。</p>
+      
+      <div class="insight-box">
+        <div class="insight-title">重點摘要</div>
+        <ul>
+          <li>員工整體健康狀況較去年提升 3.2%，但收縮壓超過 140mmHg 或舒張壓超過 90mmHg 的員工比例為 18.2%，仍高於同產業平均</li>
+          <li>35-45 歲員工族群中，同時具有腹部肥胖、高血壓、高血糖、高三酸甘油酯及低高密度脂蛋白膽固醇的<span class="highlight">代謝症候群風險明顯增加</span></li>
+          <li>心血管疾病風險因子（如總膽固醇、低密度脂蛋白膽固醇）較去年下降，顯示去年度健康促進計畫成效良好</li>
+          <li>員工 BMI 值超過 24 的比例為 28.6%，高於同產業平均，且集中在管理職位與久坐工作型態的員工</li>
+        </ul>
+      </div>
+
+      <!-- 健檢項目與費用區塊 -->
+      <h3 class="section-title">健檢項目與費用</h3>
+      <div class="card">
+        <div class="block-title">2025年度健檢項目與費用</div>
+        
+        <table class="data-table checkup-table">
+          <thead>
+            <tr>
+              <th>檢查項目</th>
+              <th>檢查內容</th>
+              <th>費用 (NT$)</th>
+              <th>適用對象</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="checkup-category">
+              <td colspan="4">基礎檢查</td>
+            </tr>
+            <tr>
+              <td>一般理學檢查</td>
+              <td>身高、體重、BMI、血壓、視力、聽力、腰圍</td>
+              <td>800</td>
+              <td>全體員工</td>
+            </tr>
+            <tr>
+              <td>血液常規檢查</td>
+              <td>血球計數、血色素、血小板、白血球分類</td>
+              <td>600</td>
+              <td>全體員工</td>
+            </tr>
+            <tr>
+              <td>尿液檢查</td>
+              <td>尿蛋白、尿糖、尿潛血、尿膽紅素</td>
+              <td>400</td>
+              <td>全體員工</td>
+            </tr>
+            <tr class="checkup-category">
+              <td colspan="4">生化檢查</td>
+            </tr>
+            <tr>
+              <td>肝功能檢查</td>
+              <td>GOT、GPT、γ-GT、總膽紅素、直接膽紅素</td>
+              <td>1,200</td>
+              <td>全體員工</td>
+            </tr>
+            <tr>
+              <td>腎功能檢查</td>
+              <td>尿素氮、肌酸酐、尿酸</td>
+              <td>900</td>
+              <td>全體員工</td>
+            </tr>
+            <tr>
+              <td>血脂肪檢查</td>
+              <td>總膽固醇、三酸甘油酯、高密度脂蛋白、低密度脂蛋白</td>
+              <td>1,500</td>
+              <td>全體員工</td>
+            </tr>
+            <tr>
+              <td>血糖檢查</td>
+              <td>空腹血糖、糖化血色素</td>
+              <td>800</td>
+              <td>全體員工</td>
+            </tr>
+            <tr class="checkup-category">
+              <td colspan="4">影像檢查</td>
+            </tr>
+            <tr>
+              <td>胸部X光檢查</td>
+              <td>胸部正面X光</td>
+              <td>800</td>
+              <td>全體員工</td>
+            </tr>
+            <tr>
+              <td>腹部超音波</td>
+              <td>肝、膽、胰、脾、腎臟檢查</td>
+              <td>1,800</td>
+              <td>35歲以上員工</td>
+            </tr>
+            <tr class="checkup-category">
+              <td colspan="4">進階檢查</td>
+            </tr>
+            <tr>
+              <td>心電圖</td>
+              <td>靜態12導程心電圖</td>
+              <td>1,000</td>
+              <td>40歲以上員工</td>
+            </tr>
+            <tr>
+              <td>骨質密度檢查</td>
+              <td>骨質密度T值測量</td>
+              <td>1,200</td>
+              <td>45歲以上女性員工</td>
+            </tr>
+            <tr>
+              <td>甲狀腺功能檢查</td>
+              <td>TSH、Free T4</td>
+              <td>1,500</td>
+              <td>40歲以上員工</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2"><strong>平均每人健檢費用</strong></td>
+              <td><strong>NT$ 9,800</strong></td>
+              <td>視年齡層而定</td>
+            </tr>
+            <tr>
+              <td colspan="2"><strong>總健檢費用</strong></td>
+              <td><strong>NT$ 3,214,400</strong></td>
+              <td>328人</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      <div class="card" style="margin-top: 30px;">
+        <div class="block-title">2026年度健檢項目建議調整</div>
+        <div class="recommendation-box">
+          <div class="recommendation-title">建議增加項目</div>
+          <ul>
+            <li><span class="highlight">代謝症候群篩檢項目</span>：針對35-45歲族群，加強腹部脂肪、胰島素阻抗等相關檢測</li>
+            <li><span class="highlight">心血管風險評估</span>：對45歲以上高風險族群增加頸動脈超音波檢查</li>
+            <li><span class="highlight">壓力與睡眠品質評估</span>：引入問卷調查與專業諮詢，評估員工心理健康狀況</li>
+          </ul>
+        </div>
+        
+        <div class="alert-box">
+          <div class="alert-title">高風險族群追蹤建議</div>
+          <ul>
+            <li>針對高風險族群增加季度追蹤檢查：血壓、血糖、BMI等關鍵指標</li>
+            <li>針對代謝症候群風險族群提供營養諮詢與運動處方</li>
+            <li>針對心血管高風險族群提供專業醫療轉介服務</li>
+          </ul>
+          <p>建議調整後預估每人平均健檢費用：NT$ 12,500，總費用約NT$ 4,100,000</p>
+        </div>
+        
+        <div class="insight-box">
+          <div class="insight-title">投資效益分析</div>
+          <p>雖然健檢費用增加約32%，但根據研究，早期發現與介入可降低後續醫療成本約45%，並減少請假與生產力損失約35%，整體投資回報率(ROI)預估為1:2.8。</p>
+        </div>
+      </div>
+      
+      <!-- 趨勢分析區塊 -->
+      <h3 class="section-title">歷年趨勢與產業比較</h3>
+      <div class="matching-blocks">
+        <div class="matching-block">
+          <div class="card">
+            <div class="block-title">歷年健檢趨勢分析</div>
+            <div class="chart-container">
+              <canvas id="trendChart"></canvas>
+            </div>
+            
+            <div class="insight-box">
+              <div class="insight-title">趨勢洞察</div>
+              <p>從 2022 年至 2025 年的健檢數據顯示，貴公司員工整體健康狀況呈現穩定改善趨勢。特別是在血壓控制方面，收縮壓與舒張壓異常比例下降 3.5%，血糖管理方面空腹血糖超過 100mg/dL 的比例下降 2.8%。然而，BMI 指數異常（BMI>24）與總膽固醇超過 200mg/dL 的員工比例改善幅度較小，顯示在<span class="highlight">體重管理方面仍有加強空間</span>。</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="matching-block">
+          <div class="card">
+            <div class="block-title">與同產業健檢比較</div>
+            <div class="industry-label">比較對象：科技業</div>
+            <div class="chart-container">
+              <canvas id="industryComparisonChart"></canvas>
+            </div>
+            
+            <div class="alert-box">
+              <div class="alert-title">需關注項目</div>
+              <p>貴公司員工在以下三項指標上高於科技業平均水平：</p>
+              <ul>
+                <li>BMI過高 (>24)：28.6% vs 產業平均 24.4%</li>
+                <li>血脂異常：總膽固醇>200mg/dL 或三酸甘油酯>150mg/dL 的比例為 22.5%</li>
+                <li>高血壓：收縮壓>140mmHg 或舒張壓>90mmHg 的比例為 18.2%</li>
+              </ul>
+              <p>這三項風險因子共同構成<span class="highlight">代謝症候群及心血管疾病的主要風險來源</span>，建議優先處理。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 健康指標分析區塊 -->
+      <h3 class="section-title">健康指標詳細分析</h3>
+      <div class="matching-blocks">
+        <div class="matching-block">
+          <div class="card">
+            <div class="block-title">主要健檢異常項目分析</div>
+            <div class="chart-container">
+              <canvas id="abnormalItemsChart"></canvas>
+            </div>
+            
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>異常項目</th>
+                  <th>異常比例</th>
+                  <th>較去年變化</th>
+                  <th>風險等級</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>BMI > 24</td>
+                  <td>28.6%</td>
+                  <td>-0.8%</td>
+                  <td><span class="badge danger">高</span></td>
+                </tr>
+                <tr>
+                  <td>總膽固醇 > 200 mg/dL</td>
+                  <td>22.5%</td>
+                  <td>-1.2%</td>
+                  <td><span class="badge warning">中</span></td>
+                </tr>
+                <tr>
+                  <td>血壓 > 140/90 mmHg</td>
+                  <td>18.2%</td>
+                  <td>-1.5%</td>
+                  <td><span class="badge warning">中</span></td>
+                </tr>
+                <tr>
+                  <td>空腹血糖 > 100 mg/dL</td>
+                  <td>15.7%</td>
+                  <td>-1.8%</td>
+                  <td><span class="badge warning">中</span></td>
+                </tr>
+                <tr>
+                  <td>肝功能異常 (GOT/GPT > 40 U/L)</td>
+                  <td>12.3%</td>
+                  <td>-0.5%</td>
+                  <td><span class="badge success">低</span></td>
+                </tr>
+                <tr>
+                  <td>尿酸 > 7.0 mg/dL</td>
+                  <td>10.8%</td>
+                  <td>-0.3%</td>
+                  <td><span class="badge success">低</span></td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div class="recommendation-box">
+              <div class="recommendation-title">改善建議</div>
+              <p>根據異常項目分析，建議針對以下三大方向進行健康促進規劃：</p>
+              <ol>
+                <li><span class="highlight">體重管理計畫</span>：針對BMI異常員工，提供專業營養諮詢與運動處方</li>
+                <li><span class="highlight">心血管健康促進</span>：針對血脂異常與高血壓員工，提供飲食指導與生活型態調整建議</li>
+                <li><span class="highlight">血糖管理</span>：針對空腹血糖異常員工，提供飲食控制與運動建議</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        
+        <div class="matching-block">
+          <div class="card risk-section">
+            <div class="block-title">員工健康風險分層</div>
+            <div class="chart-container">
+              <canvas id="riskStratificationChart"></canvas>
+            </div>
+            
+            <table class="data-table risk-table">
+              <thead>
+                <tr>
+                  <th>風險等級</th>
+                  <th>人數比例</th>
+                  <th>定義</th>
+                  <th>建議管理方式</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge danger">高風險</span></td>
+                  <td>12.4%</td>
+                  <td class="risk-factors">
+                    <ul>
+                      <li>同時具有2項以上代謝症候群風險因子</li>
+                      <li>10年內心血管疾病風險>20%</li>
+                      <li>已有慢性疾病診斷</li>
+                    </ul>
+                  </td>
+                  <td>
+                    <ul>
+                      <li>每季追蹤檢查</li>
+                      <li>一對一健康管理</li>
+                      <li>專業醫療轉介</li>
+                    </ul>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="badge warning">中風險</span></td>
+                  <td>23.8%</td>
+                  <td class="risk-factors">
+                    <ul>
+                      <li>具有1項代謝症候群風險因子</li>
+                      <li>10年內心血管疾病風險10-20%</li>
+                      <li>檢驗值輕度異常</li>
+                    </ul>
+                  </td>
+                  <td>
+                    <ul>
+                      <li>半年追蹤檢查</li>
+                      <li>小組健康管理</li>
+                      <li>生活型態改善計畫</li>
+                    </ul>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="badge success">低風險</span></td>
+                  <td>63.8%</td>
+                  <td class="risk-factors">
+                    <ul>
+                      <li>無代謝症候群風險因子</li>
+                      <li>10年內心血管疾病風險<10%</li>
+                      <li>檢驗值正常</li>
+                    </ul>
+                  </td>
+                  <td>
+                    <ul>
+                      <li>年度健康檢查</li>
+                      <li>健康促進活動</li>
+                      <li>健康生活型態維持</li>
+                    </ul>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div class="alert-box">
+              <div class="alert-title">風險族群分布特徵</div>
+              <p>高風險族群主要集中在以下人口特徵：</p>
+              <ul>
+                <li>45歲以上男性主管（佔高風險族群的38.2%）</li>
+                <li>36-45歲久坐工作型態員工（佔高風險族群的32.5%）</li>
+                <li>輪班工作者（佔高風險族群的18.7%）</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 年齡層分析區塊 -->
+      <h3 class="section-title">年齡層健康分析</h3>
+      <div class="matching-blocks">
+        <div class="matching-block">
+          <div class="card">
+            <div class="block-title">各年齡層健康狀況分析</div>
+            <div class="chart-container">
+              <canvas id="ageAnalysisChart"></canvas>
+            </div>
+            
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>年齡層</th>
+                  <th>人數比例</th>
+                  <th>主要健康問題</th>
+                  <th>風險趨勢</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>25歲以下</td>
+                  <td>12.5%</td>
+                  <td>視力問題、睡眠不足</td>
+                  <td><span class="badge success">穩定</span></td>
+                </tr>
+                <tr>
+                  <td>26-35歲</td>
+                  <td>35.7%</td>
+                  <td>壓力大、作息不規律、BMI輕度上升</td>
+                  <td><span class="badge warning">輕度上升</span></td>
+                </tr>
+                <tr>
+                  <td>36-45歲</td>
+                  <td>28.4%</td>
+                  <td><span class="highlight">代謝症候群風險因子增加</span>、血脂異常</td>
+                  <td><span class="badge danger">明顯上升</span></td>
+                </tr>
+                <tr>
+                  <td>46-55歲</td>
+                  <td>18.3%</td>
+                  <td>高血壓、血糖異常、腰痠背痛</td>
+                  <td><span class="badge warning">持續存在</span></td>
+                </tr>
+                <tr>
+                  <td>56歲以上</td>
+                  <td>5.1%</td>
+                  <td>慢性病管理、骨質疏鬆風險</td>
+                  <td><span class="badge warning">需密切追蹤</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="matching-block">
+          <div class="card age-recommendation">
+            <div class="block-title">年齡層健康管理策略</div>
+            
+            <div class="recommendation-box">
+              <div class="recommendation-title">年輕族群 (35歲以下)</div>
+              <ul>
+                <li>健康生活型態養成：均衡飲食、規律運動</li>
+                <li>壓力管理與心理健康促進</li>
+                <li>視力保健與護眼計畫</li>
+                <li>預防保健觀念建立</li>
+              </ul>
+            </div>
+            
+            <div class="recommendation-box">
+              <div class="recommendation-title">中年族群 (36-45歲)</div>
+              <ul>
+                <li><span class="highlight">代謝症候群風險管理</span>：體重控制、血壓管理</li>
+                <li>心血管疾病預防：飲食調整、運動處方</li>
+                <li>職場壓力管理與工作生活平衡</li>
+                <li>定期健康追蹤與早期介入</li>
+              </ul>
+            </div>
+            
+            <div class="recommendation-box">
+              <div class="recommendation-title">高年齡族群 (46歲以上)</div>
+              <ul>
+                <li>慢性病管理與控制：高血壓、糖尿病、高血脂</li>
+                <li>骨質健康與肌力維持計畫</li>
+                <li>心血管疾病預防與追蹤</li>
+                <li>退休健康規劃與生活調適</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>  
+
+      <!-- 健康計畫與SDGs區塊 -->
+      <h3 class="section-title">公司健康計畫與SDGs永續發展目標</h3>
+      <div class="matching-blocks">
+        <div class="matching-block">
+          <div class="card">
+            <div class="block-title">健康計畫量化投入與成果</div>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+              <div class="summary-card positive" style="margin: 0;">
+                <div class="summary-label">全面健康檢查</div>
+                <div class="summary-value">100%</div>
+                <div class="summary-label">覆蓋率</div>
+                <p style="margin-top: 10px; font-size: 14px;">年度預算4億元</p>
+                <p style="margin-top: 5px; font-size: 12px; color: #666;">GRI 403-3</p>
+              </div>
+              
+              <div class="summary-card warning" style="margin: 0;">
+                <div class="summary-label">進階專案健檢</div>
+                <div class="summary-value">73,114</div>
+                <div class="summary-label">完成人次</div>
+                <p style="margin-top: 10px; font-size: 14px;">早期發現率提升28%</p>
+                <p style="margin-top: 5px; font-size: 12px; color: #666;">RBA 3.1</p>
+              </div>
+              
+              <div class="summary-card neutral" style="margin: 0;">
+                <div class="summary-label">健康數位平台</div>
+                <div class="summary-value">70%</div>
+                <div class="summary-label">員工註冊率</div>
+                <p style="margin-top: 10px; font-size: 14px;">健康數據超過100萬筆</p>
+                <p style="margin-top: 5px; font-size: 12px; color: #666;">SASB HC-DY-330a.1</p>
+              </div>
+              
+              <div class="summary-card negative" style="margin: 0;">
+                <div class="summary-label">心理健康計畫</div>
+                <div class="summary-value">92.7%</div>
+                <div class="summary-label">滿意度</div>
+                <p style="margin-top: 10px; font-size: 14px;">EAP使用率4.4%</p>
+                <p style="margin-top: 5px; font-size: 12px; color: #666;">GRI 403-6</p>
+              </div>
+            </div>
+            
+            <div class="recommendation-box">
+              <div class="recommendation-title">永續發展策略整合</div>
+              <p>建議將健康計畫納入公司永續發展報告，強調以下量化成果：</p>
+              <ul>
+                <li>健檢異常分級管理與追蹤率100%，符合GRI 403-3標準</li>
+                <li>員工健康年齡較實際年齡年輕2.13歲，展現健康管理成效</li>
+                <li>無災害工時累計超過1億小時，體現職場安全文化</li>
+                <li>健康促進活動參與率85.6%，獲運動企業認證</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="matching-block">
+          <div class="card">
+            <div class="block-title">健康計畫與SDGs永續發展目標連結</div>
+            
+            <div class="sdg-card">
+              <div class="sdg-icon">3</div>
+              <div class="sdg-content">
+                <div class="sdg-title">SDG 3: 良好健康與福祉</div>
+                <p class="sdg-description">透過全面健康檢查與健康促進活動，提升員工健康水平，降低慢性疾病風險。</p>
+              </div>
+            </div>
+            
+            <div class="sdg-card">
+              <div class="sdg-icon">8</div>
+              <div class="sdg-content">
+                <div class="sdg-title">SDG 8: 體面工作和經濟增長</div>
+                <p class="sdg-description">創造健康安全的工作環境，提高員工生產力與工作滿意度。</p>
+              </div>
+            </div>
+            
+            <div class="sdg-card">
+              <div class="sdg-icon">12</div>
+              <div class="sdg-content">
+                <div class="sdg-title">SDG 12: 負責任消費和生產</div>
+                <p class="sdg-description">透過健康飲食教育與供應鏈管理，促進永續消費模式。</p>
+              </div>
+            </div>
+            
+            <div class="insight-box">
+              <div class="insight-title">ESG報告整合建議</div>
+              <p>貴公司健康促進計畫可與ESG報告整合，提升企業永續價值：</p>
+              <ul>
+                <li><strong>環境面(E)</strong>：健康活動與環保行動結合</li>
+                <li><strong>社會面(S)</strong>：員工健康指標納入社會責任績效</li>
+                <li><strong>治理面(G)</strong>：健康風險管理納入企業風險治理</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 健康促進計畫建議區塊 -->
+      <h3 class="section-title">健康促進計畫建議</h3>
+      
+      <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <!-- 短期計畫 -->
+        <div class="card">
+          <div class="block-title">短期計畫 (3-6個月)</div>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">代謝症候群篩檢與管理</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">針對高風險族群提供專業營養諮詢</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>風險指標改善15%</p>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">體重管理計畫</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">12週體重管理課程與運動指導</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>平均減重3-5公斤</p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">健康飲食改善</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">調整公司餐廳菜單，增加健康選項</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>健康飲食知識提升30%</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 中期計畫 -->
+        <div class="card">
+          <div class="block-title">中期計畫 (6-12個月)</div>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">企業運動處方計畫</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">提供個人化運動建議與課程</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>規律運動比例提升25%</p>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">慢性疾病管理</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">疾病管理課程與追蹤服務</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>控制良好比例提升30%</p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">壓力管理與心理健康</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">提供壓力管理與正念減壓課程</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>壓力指數下降15%</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 長期計畫 -->
+        <div class="card">
+          <div class="block-title">長期計畫 (1-3年)</div>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">數位健康管理平台</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">整合健檢數據與個人化健康建議</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>平台使用率達80%</p>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">健康企業文化建立</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">將健康納入企業核心價值</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>健康文化指數提升25%</p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 style="font-size: 16px; color: var(--primary); margin-bottom: 10px;">
+              <span class="highlight">家庭健康促進</span>
+            </h4>
+            <p style="font-size: 14px; margin-bottom: 10px;">擴展健康促進至員工家庭</p>
+            <div style="background-color: #f8f9fa; padding: 8px; border-radius: 5px; font-size: 13px;">
+              <p><strong>預期成效：</strong>家庭參與率達60%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <!-- 預期成效與投資回報 -->
+      <div class="card">
+        <div class="block-title">預期成效與投資回報</div>
+        
+        <div class="chart-container">
+          <canvas id="roiChart"></canvas>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>健康促進計畫</th>
+              <th>投資成本 (萬元)</th>
+              <th>預期量化效益 (萬元)</th>
+              <th>投資回報率</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>代謝症候群管理</td>
+              <td>120</td>
+              <td>180</td>
+              <td>1:1.5</td>
+            </tr>
+            <tr>
+              <td>體重管理與營養諮詢</td>
+              <td>80</td>
+              <td>140</td>
+              <td>1:1.8</td>
+            </tr>
+            <tr>
+              <td>企業運動處方</td>
+              <td>150</td>
+              <td>345</td>
+              <td>1:2.3</td>
+            </tr>
+            <tr>
+              <td>慢性疾病管理</td>
+              <td>90</td>
+              <td>235</td>
+              <td>1:2.6</td>
+            </tr>
+            <tr>
+              <td>壓力管理</td>
+              <td>110</td>
+              <td>255</td>
+              <td>1:2.3</td>
+            </tr>
+            <tr>
+              <td>數位健康平台</td>
+              <td>200</td>
+              <td>760</td>
+              <td>1:3.8</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>總計</strong></td>
+              <td><strong>750</strong></td>
+              <td><strong>1,915</strong></td>
+              <td><strong>1:2.8</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+        
+        <div class="insight-box">
+          <div class="insight-title">投資回報分析</div>
+          <p>健康促進計畫的投資回報主要來自以下量化效益：</p>
+          <ul>
+            <li><strong>醫療費用節省</strong>：員工健康改善後，醫療費用平均降低15-20%</li>
+            <li><strong>缺勤率下降</strong>：健康促進計畫可降低缺勤率約8-12%</li>
+            <li><strong>生產力提升</strong>：員工健康狀況改善可提升工作效率約3-5%</li>
+            <li><strong>人才留任</strong>：健康友善企業可降低人才流失率約7-10%</li>
+          </ul>
+          <p>根據研究，健康促進計畫平均每投入1元，可獲得2.8元的回報。其中，<span class="highlight">數位健康平台</span>與<span class="highlight">慢性疾病管理</span>的投資回報率最高，建議優先投入資源。</p>
+        </div>
+      </div>  
+
+    <!-- 結論與建議區塊 -->
+    <div class="card">
+      <div class="card-header">
+        <h2>結論與建議</h2>
+      </div>
+      
+      <div class="insight-box">
+        <div class="insight-title">健檢結果總結</div>
+        <p>貴公司2025年度員工健檢結果顯示，整體健康狀況較去年有所改善，但仍存在以下關鍵健康風險：</p>
+        <ol>
+          <li>代謝症候群風險因子（BMI過高、血壓偏高、血脂異常）比例仍高於產業平均</li>
+          <li>36-45歲族群健康風險明顯上升，需加強預防與管理</li>
+          <li>高風險族群（12.4%）需專業健康管理與追蹤</li>
+        </ol>
+      </div>
+      
+      <div class="recommendation-box">
+        <div class="recommendation-title">關鍵行動建議</div>
+        <ol>
+          <li><span class="highlight">建立全面健康風險管理系統</span>：整合健檢數據、風險評估與個人化健康管理</li>
+          <li><span class="highlight">針對代謝症候群高風險族群提供專業介入</span>：特別是36-45歲族群</li>
+          <li><span class="highlight">強化健康促進計畫</span>：體重管理、運動處方、營養諮詢與壓力管理</li>
+          <li><span class="highlight">建立數位健康平台</span>：提供個人化健康管理與追蹤</li>
+          <li><span class="highlight">將健康管理納入ESG策略</span>：提升企業永續價值</li>
+        </ol>
+      </div>
+      
+      <div class="alert-box">
+        <div class="alert-title">未來展望</div>
+        <p>健康是企業最重要的資產。透過系統性的健康管理與促進計畫，不僅可改善員工健康狀況，也能提升企業競爭力與永續發展能力。建議貴公司將健康管理納入企業策略，持續投資員工健康，創造共贏局面。</p>
+      </div>
+      
+      <div class="action-buttons">
+        <a href="#" class="action-button" onclick="downloadReport()">下載報告</a>
+        <a href="#" class="action-button secondary" onclick="shareReport()">連結分享</a>
+      </div>
+    </div>
+  </div>
+  
+  <footer class="footer">
+    <div class="container">
+      <p>© 2025 健康數據分析股份有限公司 版權所有</p>
+      <p>本報告僅供參考，不構成醫療建議。如有健康問題，請諮詢專業醫療人員。</p>
+    </div>
+  </footer>
+
+  <script>
+    // 圖表初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 設定圖表全域樣式
+      Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+      Chart.defaults.color = '#666';
+      
+      // 歷年趨勢分析圖表
+      const trendCtx = document.getElementById('trendChart').getContext('2d');
+      const trendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: ['2022', '2023', '2024', '2025'],
+          datasets: [
+            {
+              label: 'BMI異常比例',
+              data: [32.4, 30.8, 29.4, 28.6],
+              borderColor: '#95a5a6',
+              backgroundColor: 'rgba(149, 165, 166, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: '血壓異常比例',
+              data: [23.5, 21.7, 19.7, 18.2],
+              borderColor: '#7f8c8d',
+              backgroundColor: 'rgba(127, 140, 141, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: '血脂異常比例',
+              data: [26.8, 25.3, 23.7, 22.5],
+              borderColor: '#bdc3c7',
+              backgroundColor: 'rgba(189, 195, 199, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: '血糖異常比例',
+              data: [20.3, 18.5, 17.5, 15.7],
+              borderColor: '#a9b7b7',
+              backgroundColor: 'rgba(169, 183, 183, 0.1)',
+              tension: 0.4,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: '2022-2025年度主要健康指標趨勢',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 40,
+              title: {
+                display: true,
+                text: '異常比例 (%)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // 與同產業健檢比較圖表
+      const industryCtx = document.getElementById('industryComparisonChart').getContext('2d');
+      const industryChart = new Chart(industryCtx, {
+        type: 'bar',
+        data: {
+          labels: ['BMI異常', '血壓異常', '血脂異常', '血糖異常', '肝功能異常', '尿酸異常'],
+          datasets: [
+            {
+              label: '貴公司',
+              data: [28.6, 18.2, 22.5, 15.7, 12.3, 10.8],
+              backgroundColor: '#95a5a6'
+            },
+            {
+              label: '科技業平均',
+              data: [24.4, 16.8, 19.2, 14.5, 13.1, 10.2],
+              backgroundColor: '#bdc3c7'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: '與科技業平均健康指標比較',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            legend: {
+              position: 'bottom'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 35,
+              title: {
+                display: true,
+                text: '異常比例 (%)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // 主要健檢異常項目分析圖表
+      const abnormalCtx = document.getElementById('abnormalItemsChart').getContext('2d');
+      const abnormalChart = new Chart(abnormalCtx, {
+        type: 'bar',
+        data: {
+          labels: ['BMI > 24', '總膽固醇 > 200 mg/dL', '血壓 > 140/90 mmHg', '空腹血糖 > 100 mg/dL', '肝功能異常', '尿酸 > 7.0 mg/dL'],
+          datasets: [
+            {
+              label: '異常比例',
+              data: [28.6, 22.5, 18.2, 15.7, 12.3, 10.8],
+              backgroundColor: [
+                '#95a5a6',
+                '#bdc3c7',
+                '#a9b7b7',
+                '#d0d3d4',
+                '#e0e0e0',
+                '#f0f0f0'
+              ]
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: '主要健檢異常項目分析',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 35,
+              title: {
+                display: true,
+                text: '異常比例 (%)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // 員工健康風險分層圖表
+      const riskCtx = document.getElementById('riskStratificationChart').getContext('2d');
+      const riskChart = new Chart(riskCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['低風險', '中風險', '高風險'],
+          datasets: [
+            {
+              data: [63.8, 23.8, 12.4],
+              backgroundColor: [
+                '#a9b7b7',
+                '#bdc3c7',
+                '#95a5a6'
+              ],
+              borderWidth: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: '員工健康風險分層',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            legend: {
+              position: 'bottom'
+            }
+          },
+          cutout: '60%'
+        }
+      });
+      
+      // 年齡層健康分析圖表
+      const ageCtx = document.getElementById('ageAnalysisChart').getContext('2d');
+      const ageChart = new Chart(ageCtx, {
+        type: 'bar',
+        data: {
+          labels: ['25歲以下', '26-35歲', '36-45歲', '46-55歲', '56歲以上'],
+          datasets: [
+            {
+              label: 'BMI異常',
+              data: [10.2, 22.5, 38.7, 35.2, 30.8],
+              backgroundColor: '#95a5a6'
+            },
+            {
+              label: '血壓異常',
+              data: [5.3, 12.7, 22.5, 28.4, 32.1],
+              backgroundColor: '#bdc3c7'
+            },
+            {
+              label: '血脂異常',
+              data: [8.7, 15.3, 28.6, 32.5, 35.7],
+              backgroundColor: '#a9b7b7'
+            },
+            {
+              label: '血糖異常',
+              data: [3.2, 8.5, 18.3, 25.7, 30.2],
+              backgroundColor: '#d0d3d4'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: '各年齡層健康風險分布',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            legend: {
+              position: 'bottom'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 45,
+              title: {
+                display: true,
+                text: '異常比例 (%)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // 預期成效與投資回報圖表
+      const roiCtx = document.getElementById('roiChart').getContext('2d');
+      const roiChart = new Chart(roiCtx, {
+        type: 'bar',
+        data: {
+          labels: ['代謝症候群管理', '體重管理與營養諮詢', '企業運動處方', '慢性疾病管理', '壓力管理', '數位健康平台'],
+          datasets: [
+            {
+              label: '投資成本',
+              data: [120, 80, 150, 90, 110, 200],
+              backgroundColor: '#bdc3c7'
+            },
+            {
+              label: '預期量化效益',
+              data: [180, 140, 345, 235, 255, 760],
+              backgroundColor: '#95a5a6'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: '健康促進計畫投資與回報分析',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.raw + '萬元';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: '金額 (萬元)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '萬';
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+    
+    // 下載報告功能
+    function downloadReport() {
+      alert('報告下載中，請稍候...');
+      // 這裡可以實現實際的PDF下載功能
+      setTimeout(function() {
+        alert('報告已下載完成！');
+      }, 1500);
+    }
+    
+    // 分享報告功能
+    function shareReport() {
+      const shareUrl = window.location.href;
+      const tempInput = document.createElement('input');
+      document.body.appendChild(tempInput);
+      tempInput.value = shareUrl;
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      alert('報告連結已複製到剪貼簿！\n' + shareUrl);
+    }
+  </script>
+</body>
+</html>
+
